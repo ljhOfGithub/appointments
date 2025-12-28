@@ -191,19 +191,20 @@ A modern full-stack web application for appointment management featuring JWT-bas
 ## Screenshots
 
 ### Desktop Version
+![Desktop Dashboard](frontend/public/screenshots/desktop-appointments.png)
 ![Desktop Dashboard](frontend/public/screenshots/desktop-dashboard.png)
+![Desktop Dashboard](frontend/public/screenshots/profile.png)
+![Desktop Dashboard](frontend/public/screenshots/newAppointment.png)
 
 ### Mobile Version
 ![Mobile View](frontend/public/screenshots/mobile-view.png)
+![Mobile View](frontend/public/screenshots/mobileMyAppointment.png)
+![Mobile View](frontend/public/screenshots/mobileProfile.png)
+![Mobile View](frontend/public/screenshots/stats.png)
 
 ### Authentication
 ![Login Screen](frontend/public/screenshots/login.png)
 ![Registration](frontend/public/screenshots/register.png)
-
-### Main Features
-![Appointment List](frontend/public/screenshots/appointments.png)
-![Profile Page](frontend/public/screenshots/profile.png)
-![Statistics](frontend/public/screenshots/stats.png)
 
 ## Future Enhancements
 
