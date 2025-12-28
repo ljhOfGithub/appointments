@@ -27,16 +27,18 @@ import {
   List,
   ListItem,
   ListItemIcon,
+  ListItemButton,
   ListItemText,
   Divider,
   LinearProgress,
-  ListItemButton,
   Card,
   CardContent,
   CardHeader,
   Avatar,
   Tabs,
-  Tab
+  Tab,
+  Menu,
+  ListItemAvatar
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -44,7 +46,6 @@ import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
   CalendarToday as CalendarIcon,
-  CheckCircle as CheckCircleIcon,
   Refresh as RefreshIcon,
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -58,19 +59,22 @@ import {
   Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
   Help as HelpIcon,
-  Notifications as NotificationsIcon
+  Notifications as NotificationsIcon,
+  AccountCircle as AccountIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
-import axios from 'axios';
 
-// Import components
+// Import components and API
 import AppointmentForm from './common/AppointmentForm';
 import AppointmentCard from './common/AppointmentCard';
 import StatsPanel from './common/StatsPanel';
+import api from '../api';
 
-const API_URL = 'http://localhost:5000/api';
-
-const MobileApp = () => {
+const MobileApp = ({ user, onLogout, onNavigateToProfile }) => {
   // State management
   const [appointments, setAppointments] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -81,8 +85,9 @@ const MobileApp = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, scheduled: 0, cancelled: 0, completed: 0, today: 0 });
   const [bottomNav, setBottomNav] = useState(0);
-  const [activeView, setActiveView] = useState('list'); // 'list', 'stats', 'calendar'
+  const [activeView, setActiveView] = useState('list');
   const [activeTab, setActiveTab] = useState(0);
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
 
   // Filter and search state
   const [filters, setFilters] = useState({
@@ -115,11 +120,15 @@ const MobileApp = () => {
 
   // Fetch data on component mount and when filters change
   useEffect(() => {
-    fetchAppointments();
-    fetchStats();
-  }, [filters, pagination.page]);
+    if (user) {
+      fetchAppointments();
+      fetchStats();
+    }
+  }, [filters, pagination.page, user]);
 
   const fetchAppointments = async () => {
+    if (!user) return;
+
     setLoading(true);
     try {
       const params = {
@@ -131,7 +140,7 @@ const MobileApp = () => {
         per_page: pagination.per_page
       };
 
-      const response = await axios.get(`${API_URL}/appointments`, { params });
+      const response = await api.get('/appointments', { params });
       setAppointments(response.data.appointments);
       setPagination({
         ...pagination,
@@ -146,8 +155,10 @@ const MobileApp = () => {
   };
 
   const fetchStats = async () => {
+    if (!user) return;
+
     try {
-      const response = await axios.get(`${API_URL}/appointments/stats`);
+      const response = await api.get('/appointments/stats');
       setStats(response.data);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
@@ -224,10 +235,10 @@ const MobileApp = () => {
 
     try {
       if (editingAppointment) {
-        await axios.put(`${API_URL}/appointments/${editingAppointment.id}`, formData);
+        await api.put(`/appointments/${editingAppointment.id}`, formData);
         showSnackbar('Appointment updated successfully', 'success');
       } else {
-        await axios.post(`${API_URL}/appointments`, formData);
+        await api.post('/appointments', formData);
         showSnackbar('Appointment created successfully', 'success');
       }
       setOpenDialog(false);
@@ -257,7 +268,7 @@ const MobileApp = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this appointment?')) {
       try {
-        await axios.delete(`${API_URL}/appointments/${id}`);
+        await api.delete(`/appointments/${id}`);
         showSnackbar('Appointment deleted successfully', 'success');
         fetchAppointments();
         fetchStats();
@@ -269,7 +280,7 @@ const MobileApp = () => {
 
   const handleCancel = async (id) => {
     try {
-      await axios.post(`${API_URL}/appointments/${id}/cancel`);
+      await api.post(`/appointments/${id}/cancel`);
       showSnackbar('Appointment cancelled successfully', 'success');
       fetchAppointments();
       fetchStats();
@@ -280,7 +291,7 @@ const MobileApp = () => {
 
   const handleComplete = async (id) => {
     try {
-      await axios.post(`${API_URL}/appointments/${id}/complete`);
+      await api.post(`/appointments/${id}/complete`);
       showSnackbar('Appointment marked as completed', 'success');
       fetchAppointments();
       fetchStats();
@@ -330,6 +341,29 @@ const MobileApp = () => {
     setActiveTab(newValue);
   };
 
+  // User menu handlers
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  const handleProfileClick = () => {
+    handleUserMenuClose();
+    if (onNavigateToProfile) {
+      onNavigateToProfile();
+    }
+  };
+
+  const handleLogoutClick = () => {
+    handleUserMenuClose();
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
   // Today's appointments
   const todayAppointments = appointments.filter(app =>
     app.date === dayjs().format('YYYY-MM-DD') && app.status === 'scheduled'
@@ -344,6 +378,14 @@ const MobileApp = () => {
       appointmentDate.isBefore(nextWeek) &&
       app.status === 'scheduled';
   });
+
+  if (!user) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 2 }}>
+        <Typography>Please login to access appointments</Typography>
+      </Box>
+    );
+  }
 
   // Render different views based on activeView
   const renderView = () => {
@@ -371,11 +413,11 @@ const MobileApp = () => {
                         py: 1.5
                       }}
                     >
-                      <ListItemIcon>
+                      <ListItemAvatar>
                         <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
                           <TimeIcon fontSize="small" />
                         </Avatar>
-                      </ListItemIcon>
+                      </ListItemAvatar>
                       <ListItemText
                         primary={appointment.title}
                         secondary={
@@ -649,14 +691,21 @@ const MobileApp = () => {
     <Box sx={{ width: 280 }}>
       {/* User Profile Section */}
       <Box sx={{ p: 3, bgcolor: 'primary.main', color: 'white' }}>
-        <Avatar sx={{ width: 56, height: 56, mb: 2, bgcolor: 'white', color: 'primary.main' }}>
-          <PersonIcon />
-        </Avatar>
-        <Typography variant="h6" gutterBottom>
-          Welcome Back!
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <Avatar sx={{ width: 56, height: 56, bgcolor: 'white', color: 'primary.main' }}>
+            {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              {user.fullName || user.username}
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              @{user.username}
+            </Typography>
+          </Box>
+        </Box>
         <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          {appointments.length} appointments managed
+          {user.appointmentCount || 0} appointments managed
         </Typography>
       </Box>
 
@@ -706,14 +755,17 @@ const MobileApp = () => {
 
         <Divider sx={{ my: 2 }} />
 
-        {/* <ListItemButton sx={{ borderRadius: 1, mb: 1 }}>
+        <ListItemButton
+          onClick={handleProfileClick}
+          sx={{ borderRadius: 1, mb: 1 }}
+        >
           <ListItemIcon>
-            <NotificationsIcon color="action" />
+            <AccountIcon color="action" />
           </ListItemIcon>
-          <ListItemText primary="Notifications" />
+          <ListItemText primary="My Profile" />
         </ListItemButton>
 
-        <ListItemButton sx={{ borderRadius: 1, mb: 1 }}>
+        {/* <ListItemButton sx={{ borderRadius: 1, mb: 1 }}>
           <ListItemIcon>
             <SettingsIcon color="action" />
           </ListItemIcon>
@@ -725,16 +777,19 @@ const MobileApp = () => {
             <HelpIcon color="action" />
           </ListItemIcon>
           <ListItemText primary="Help & Support" />
-        </ListItemButton>
+        </ListItemButton> */}
 
         <Divider sx={{ my: 2 }} />
 
-        <ListItemButton sx={{ borderRadius: 1, color: 'error.main' }}>
+        <ListItemButton
+          onClick={handleLogoutClick}
+          sx={{ borderRadius: 1, color: 'error.main' }}
+        >
           <ListItemIcon>
             <LogoutIcon color="error" />
           </ListItemIcon>
           <ListItemText primary="Logout" />
-        </ListItemButton> */}
+        </ListItemButton>
       </List>
 
       {/* Quick Stats Footer */}
@@ -955,30 +1010,6 @@ const MobileApp = () => {
             />
           </Box>
 
-          {/* Sort Options */}
-          <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary', mb: 1 }}>
-            Sort By
-          </Typography>
-
-          <Box sx={{ mb: 3 }}>
-            <Grid container spacing={1}>
-              {['date', 'title', 'customerName'].map((sortBy) => (
-                <Grid item xs={4} key={sortBy}>
-                  <Button
-                    fullWidth
-                    variant={filters.sortBy === sortBy ? "contained" : "outlined"}
-                    size="small"
-                    onClick={() => handleFilterChange('sortBy', sortBy)}
-                    sx={{ borderRadius: 1 }}
-                  >
-                    {sortBy === 'date' ? 'Date' :
-                      sortBy === 'title' ? 'Title' : 'Customer'}
-                  </Button>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-
           {/* Action Buttons */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
@@ -990,7 +1021,6 @@ const MobileApp = () => {
                   status: 'all',
                   startDate: null,
                   endDate: null,
-                  sortBy: 'date'
                 });
                 showSnackbar('Filters cleared', 'info');
                 setOpenFilterDrawer(false);

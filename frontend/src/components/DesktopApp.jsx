@@ -29,7 +29,13 @@ import {
   TextField,
   Tooltip,
   Chip,
-  LinearProgress
+  LinearProgress,
+  Menu,
+  Avatar,
+  ListItemIcon,
+  ListItemText,
+  Badge,
+  Divider
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -41,23 +47,27 @@ import {
   Download as DownloadIcon,
   Print as PrintIcon,
   Menu as MenuIcon,
-  Edit as EditIcon,
-  Cancel as CancelIcon,
-  Delete as DeleteIcon,
   Dashboard as DashboardIcon,
-  Schedule as ScheduleIcon
+  Schedule as ScheduleIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+  AccountCircle as AccountIcon,
+  Notifications as NotificationsIcon
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
-import axios from 'axios';
 
-// Import components
+// Import components and API
 import AppointmentForm from './common/AppointmentForm';
 import AppointmentCard from './common/AppointmentCard';
 import StatsPanel from './common/StatsPanel';
+import api from '../api';
 
-const API_URL = 'http://localhost:5000/api';
-
-const DesktopApp = () => {
+const DesktopApp = ({ user, onLogout, onNavigateToProfile }) => {
   // State management
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointments, setSelectedAppointments] = useState([]);
@@ -67,7 +77,8 @@ const DesktopApp = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, scheduled: 0, cancelled: 0, completed: 0, today: 0 });
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
+  const [viewMode, setViewMode] = useState('table');
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
 
   // Filter and search state
   const [filters, setFilters] = useState({
@@ -102,11 +113,15 @@ const DesktopApp = () => {
 
   // Fetch data on component mount and when filters change
   useEffect(() => {
-    fetchAppointments();
-    fetchStats();
-  }, [filters, pagination.page]);
+    if (user) {
+      fetchAppointments();
+      fetchStats();
+    }
+  }, [filters, pagination.page, user]);
 
   const fetchAppointments = async () => {
+    if (!user) return;
+
     setLoading(true);
     try {
       const params = {
@@ -118,7 +133,7 @@ const DesktopApp = () => {
         per_page: pagination.per_page
       };
 
-      const response = await axios.get(`${API_URL}/appointments`, { params });
+      const response = await api.get('/appointments', { params });
       setAppointments(response.data.appointments);
       setPagination({
         ...pagination,
@@ -133,8 +148,10 @@ const DesktopApp = () => {
   };
 
   const fetchStats = async () => {
+    if (!user) return;
+
     try {
-      const response = await axios.get(`${API_URL}/appointments/stats`);
+      const response = await api.get('/appointments/stats');
       setStats(response.data);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
@@ -211,10 +228,10 @@ const DesktopApp = () => {
 
     try {
       if (editingAppointment) {
-        await axios.put(`${API_URL}/appointments/${editingAppointment.id}`, formData);
+        await api.put(`/appointments/${editingAppointment.id}`, formData);
         showSnackbar('Appointment updated successfully', 'success');
       } else {
-        await axios.post(`${API_URL}/appointments`, formData);
+        await api.post('/appointments', formData);
         showSnackbar('Appointment created successfully', 'success');
       }
       setOpenDialog(false);
@@ -244,7 +261,7 @@ const DesktopApp = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this appointment?')) {
       try {
-        await axios.delete(`${API_URL}/appointments/${id}`);
+        await api.delete(`/appointments/${id}`);
         showSnackbar('Appointment deleted successfully', 'success');
         fetchAppointments();
         fetchStats();
@@ -256,7 +273,7 @@ const DesktopApp = () => {
 
   const handleCancel = async (id) => {
     try {
-      await axios.post(`${API_URL}/appointments/${id}/cancel`);
+      await api.post(`/appointments/${id}/cancel`);
       showSnackbar('Appointment cancelled successfully', 'success');
       fetchAppointments();
       fetchStats();
@@ -267,7 +284,7 @@ const DesktopApp = () => {
 
   const handleComplete = async (id) => {
     try {
-      await axios.post(`${API_URL}/appointments/${id}/complete`);
+      await api.post(`/appointments/${id}/complete`);
       showSnackbar('Appointment marked as completed', 'success');
       fetchAppointments();
       fetchStats();
@@ -285,7 +302,7 @@ const DesktopApp = () => {
 
     if (window.confirm(`Are you sure you want to delete ${selectedAppointments.length} appointment(s)?`)) {
       try {
-        await axios.post(`${API_URL}/appointments/bulk`, {
+        await api.post('/appointments/bulk', {
           appointmentIds: selectedAppointments,
           action: 'delete'
         });
@@ -306,7 +323,7 @@ const DesktopApp = () => {
     }
 
     try {
-      await axios.post(`${API_URL}/appointments/bulk`, {
+      await api.post('/appointments/bulk', {
         appointmentIds: selectedAppointments,
         action: 'cancel'
       });
@@ -409,6 +426,37 @@ const DesktopApp = () => {
     }
   };
 
+  // User menu handlers
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  const handleProfileClick = () => {
+    handleUserMenuClose();
+    if (onNavigateToProfile) {
+      onNavigateToProfile();
+    }
+  };
+
+  const handleLogoutClick = () => {
+    handleUserMenuClose();
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
+  if (!user) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography>Please login to access appointments</Typography>
+      </Box>
+    );
+  }
+
   return (
     <div className="App">
       {/* Header */}
@@ -426,15 +474,51 @@ const DesktopApp = () => {
           <CalendarIcon sx={{ mr: 2 }} />
 
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Appointment Scheduler (Desktop)
+            Appointment Scheduler
           </Typography>
 
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Tooltip title="Refresh data">
               <IconButton color="inherit" onClick={fetchAppointments}>
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
+
+            {/* User Menu */}
+            <IconButton
+              onClick={handleUserMenuOpen}
+              color="inherit"
+              sx={{ ml: 1 }}
+            >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+                {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+              </Avatar>
+            </IconButton>
+            <Menu
+              anchorEl={userMenuAnchor}
+              open={Boolean(userMenuAnchor)}
+              onClose={handleUserMenuClose}
+              PaperProps={{
+                sx: {
+                  mt: 1.5,
+                  minWidth: 200
+                }
+              }}
+            >
+              <MenuItem onClick={handleProfileClick}>
+                <ListItemIcon>
+                  <AccountIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Profile</ListItemText>
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogoutClick}>
+                <ListItemIcon>
+                  <LogoutIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Logout</ListItemText>
+              </MenuItem>
+            </Menu>
           </Box>
         </Toolbar>
       </AppBar>
@@ -459,6 +543,32 @@ const DesktopApp = () => {
         <Toolbar />
 
         <Box sx={{ p: 3 }}>
+          {/* User Info */}
+          <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+                {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle1" fontWeight="600">
+                  {user.fullName || user.username}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  @{user.username}
+                </Typography>
+              </Box>
+            </Box>
+            <Button
+              variant="outlined"
+              size="small"
+              fullWidth
+              startIcon={<AccountIcon />}
+              onClick={handleProfileClick}
+            >
+              View Profile
+            </Button>
+          </Paper>
+
           {/* Stats Panel */}
           <StatsPanel stats={stats} />
 
@@ -618,7 +728,7 @@ const DesktopApp = () => {
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={6}>
                 <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
-                  Appointments
+                  My Appointments
                   <Typography variant="body2" color="text.secondary" component="span" sx={{ ml: 2 }}>
                     {pagination.total} total appointments
                   </Typography>
@@ -631,7 +741,7 @@ const DesktopApp = () => {
                     <Button
                       variant="outlined"
                       color="error"
-                      startIcon={<DownloadIcon />}
+                      startIcon={<DeleteIcon />}
                       onClick={handleBulkDelete}
                     >
                       Delete ({selectedAppointments.length})
@@ -639,7 +749,7 @@ const DesktopApp = () => {
                     <Button
                       variant="outlined"
                       color="warning"
-                      startIcon={<DownloadIcon />}
+                      startIcon={<CancelIcon />}
                       onClick={handleBulkCancel}
                     >
                       Cancel ({selectedAppointments.length})
@@ -782,15 +892,27 @@ const DesktopApp = () => {
                                 </Tooltip>
 
                                 {appointment.status === 'scheduled' && (
-                                  <Tooltip title="Cancel">
-                                    <IconButton
-                                      size="small"
-                                      color="warning"
-                                      onClick={() => handleCancel(appointment.id)}
-                                    >
-                                      <CancelIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
+                                  <>
+                                    <Tooltip title="Mark as Complete">
+                                      <IconButton
+                                        size="small"
+                                        color="success"
+                                        onClick={() => handleComplete(appointment.id)}
+                                      >
+                                        <CheckCircleIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+
+                                    <Tooltip title="Cancel">
+                                      <IconButton
+                                        size="small"
+                                        color="warning"
+                                        onClick={() => handleCancel(appointment.id)}
+                                      >
+                                        <CancelIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </>
                                 )}
 
                                 <Tooltip title="Delete">
