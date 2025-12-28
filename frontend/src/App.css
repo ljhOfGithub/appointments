@@ -1,42 +1,344 @@
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  min-height: 100vh;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-@keyframes logo-spin {
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Mobile Specific Styles */
+@media (max-width: 768px) {
+
+  /* Hide elements on mobile */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Mobile card styles */
+  .mobile-appointment-card {
+    margin: 0;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .mobile-appointment-card:active {
+    transform: scale(0.98);
+  }
+
+  /* Better touch targets */
+  .mobile-touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Optimize spacing for mobile */
+  .mobile-spacing {
+    padding: 16px !important;
+  }
+
+  /* Mobile form inputs */
+  .mobile-form-input .MuiInputBase-root {
+    font-size: 16px !important;
+    /* Prevents iOS zoom on focus */
+  }
+
+  /* Bottom navigation safe area for iPhone */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tablet-optimized {
+    max-width: 100%;
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 1025px) {
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Animation Classes */
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(10px);
   }
+
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
   }
 }
 
-.card {
-  padding: 2em;
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
 }
 
-.read-the-docs {
-  color: #888;
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.slide-out {
+  animation: slideOut 0.3s ease-out;
+}
+
+/* Touch Feedback */
+.touch-feedback:active {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Loading States */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-scheduled {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-completed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Swipeable Drawer Styles */
+.swipeable-drawer .MuiPaper-root {
+  max-width: 85%;
+}
+
+/* Bottom Navigation Enhancement */
+.MuiBottomNavigation-root {
+  background-color: #fff;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.MuiBottomNavigationAction-root {
+  min-width: auto;
+  padding: 8px 12px;
+}
+
+.MuiBottomNavigationAction-label {
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+/* Floating Action Button */
+.MuiFab-root {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Dialog Optimization for Mobile */
+@media (max-width: 768px) {
+  .MuiDialog-paper {
+    margin: 0 !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  .MuiDialogContent-root {
+    padding: 20px !important;
+  }
+}
+
+/* Form Field Optimization */
+.MuiFormControl-root {
+  margin-bottom: 16px;
+}
+
+.MuiInputLabel-root {
+  font-size: 14px;
+}
+
+/* Button Sizes for Mobile */
+.mobile-button-lg {
+  height: 56px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Card Hover Effects for Desktop */
+@media (min-width: 769px) {
+  .hover-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+/* Empty State Styles */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  color: #bdbdbd;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+/* Grid Optimization */
+.grid-responsive {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Typography Optimization */
+@media (max-width: 768px) {
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+
+  .mobile-text-md {
+    font-size: 1rem !important;
+  }
+
+  .mobile-text-lg {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* Safe Area Support for Modern Browsers */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: min(0vmin, env(safe-area-inset-left));
+    padding-right: min(0vmin, env(safe-area-inset-right));
+    padding-bottom: min(0vmin, env(safe-area-inset-bottom));
+  }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
+
+  .MuiPaper-root {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .MuiButton-contained {
+    border: 2px solid currentColor;
+  }
+
+  .MuiCard-root {
+    border: 1px solid currentColor;
+  }
 }

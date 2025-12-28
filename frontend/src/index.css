@@ -1,3 +1,4 @@
+/* Global Styles */
 * {
   margin: 0;
   padding: 0;
@@ -5,10 +6,191 @@
 }
 
 body {
-  font-family: 'Roboto', sans-serif;
-  background-color: #f5f5f5;
+  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+  line-height: 1.6;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 899px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Improve touch targets */
+  button,
+  .MuiButtonBase-root,
+  .MuiChip-root {
+    min-height: 44px !important;
+  }
+
+  .MuiIconButton-root {
+    padding: 12px !important;
+  }
+
+  /* Better scrolling on mobile */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+}
+
+/* Desktop-specific styles */
+@media (min-width: 900px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+
+  /* Custom scrollbar for desktop */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}
+
+/* Utility Classes */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Animation Classes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
+
+  .MuiPaper-root {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+/* Card Hover Effects (desktop only) */
+@media (min-width: 900px) {
+  .hover-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Status Colors */
+.status-scheduled {
+  background-color: #d4edda !important;
+  color: #155724 !important;
+}
+
+.status-completed {
+  background-color: #d1ecf1 !important;
+  color: #0c5460 !important;
+}
+
+.status-cancelled {
+  background-color: #f8d7da !important;
+  color: #721c24 !important;
+}
+
+/* Loading Spinner */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  color: #bdbdbd;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+/* Swipeable drawer styles */
+.MuiDrawer-paperAnchorBottom {
+  max-height: 80vh !important;
+}
+
+/* Bottom navigation fix */
+.MuiBottomNavigation-root {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Mobile form improvements */
+@media (max-width: 899px) {
+  .MuiDialog-paper {
+    margin: 16px !important;
+    max-width: calc(100% - 32px) !important;
+    max-height: calc(100% - 32px) !important;
+  }
+
+  .MuiTextField-root {
+    font-size: 16px !important;
+    /* Prevents iOS zoom on focus */
+  }
+}
+
+/* Desktop layout improvements */
+@media (min-width: 900px) {
+  .desktop-container {
+    max-width: 1600px !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Touch feedback improvements */
+.MuiButtonBase-root:active {
+  opacity: 0.7;
 }
