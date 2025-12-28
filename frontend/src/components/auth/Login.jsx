@@ -21,9 +21,7 @@ import {
   Login as LoginIcon,
   HowToReg as RegisterIcon
 } from '@mui/icons-material';
-import axios from 'axios';
-import api from '../../api';
-const API_URL = 'http://localhost:5000/api';
+import api, { tokenStorage } from '../../api';
 
 const Login = ({ onLoginSuccess, onSwitchToRegister }) => {
   const [formData, setFormData] = useState({
@@ -78,8 +76,14 @@ const Login = ({ onLoginSuccess, onSwitchToRegister }) => {
     try {
       const response = await api.post('/auth/login', formData);
 
+      // 保存tokens和用户信息到localStorage
+      const { accessToken, refreshToken, user } = response.data;
+      tokenStorage.setAccessToken(accessToken);
+      tokenStorage.setRefreshToken(refreshToken);
+      tokenStorage.setUser(user);
+
       if (onLoginSuccess) {
-        onLoginSuccess(response.data.user);
+        onLoginSuccess(user);
       }
     } catch (error) {
       const message = error.response?.data?.error || 'Login failed. Please try again.';
@@ -94,15 +98,19 @@ const Login = ({ onLoginSuccess, onSwitchToRegister }) => {
     setErrorMessage('');
 
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const response = await api.post('/auth/login', {
         email: 'test@example.com',
         password: 'password123'
-      }, {
-        withCredentials: true
       });
 
+      // 保存tokens和用户信息
+      const { accessToken, refreshToken, user } = response.data;
+      tokenStorage.setAccessToken(accessToken);
+      tokenStorage.setRefreshToken(refreshToken);
+      tokenStorage.setUser(user);
+
       if (onLoginSuccess) {
-        onLoginSuccess(response.data.user);
+        onLoginSuccess(user);
       }
     } catch (error) {
       setErrorMessage('Demo login failed. Please try manual login.');

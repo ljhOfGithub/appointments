@@ -7,7 +7,7 @@ import MobileApp from './components/MobileApp';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Profile from './components/user/Profile';
-import axios from 'axios';
+import api, { tokenStorage } from './api';
 
 // Create theme
 const theme = createTheme({
@@ -33,8 +33,6 @@ const theme = createTheme({
   },
 });
 
-const API_URL = 'http://localhost:5000/api';
-
 function App() {
   // Detect if it's mobile device
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -43,7 +41,6 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('login'); // 'login', 'register', 'app', 'profile'
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -52,21 +49,39 @@ function App() {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get(`${API_URL}/auth/session`, {
-        withCredentials: true
-      });
+      const userFromStorage = tokenStorage.getUser();
+      const token = tokenStorage.getAccessToken();
 
-      if (response.data.authenticated) {
-        setUser(response.data.user);
-        setIsAuthenticated(true);
-        setView('app');
+      if (userFromStorage && token) {
+        // Verify token is still valid
+        const response = await api.get('/auth/verify');
+
+        if (response.data.authenticated) {
+          setUser(response.data.user);
+          setView('app');
+        } else {
+          // Token expired, try to refresh
+          try {
+            const refreshResponse = await api.post('/auth/refresh');
+            const { accessToken, user: refreshedUser } = refreshResponse.data;
+
+            tokenStorage.setAccessToken(accessToken);
+            tokenStorage.setUser(refreshedUser);
+
+            setUser(refreshedUser);
+            setView('app');
+          } catch (refreshError) {
+            // Refresh failed, clear storage
+            tokenStorage.clear();
+            setView('login');
+          }
+        }
       } else {
-        setUser(null);
-        setIsAuthenticated(false);
         setView('login');
       }
     } catch (error) {
       console.error('Auth check failed:', error);
+      tokenStorage.clear();
       setView('login');
     } finally {
       setLoading(false);
@@ -75,26 +90,23 @@ function App() {
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
-    setIsAuthenticated(true);
     setView('app');
   };
 
   const handleRegisterSuccess = (userData) => {
     setUser(userData);
-    setIsAuthenticated(true);
     setView('app');
   };
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${API_URL}/auth/logout`, {}, {
-        withCredentials: true
-      });
-      setUser(null);
-      setIsAuthenticated(false);
-      setView('login');
+      await api.post('/auth/logout');
     } catch (error) {
       console.error('Logout failed:', error);
+    } finally {
+      tokenStorage.clear();
+      setUser(null);
+      setView('login');
     }
   };
 

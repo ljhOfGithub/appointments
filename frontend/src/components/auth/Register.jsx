@@ -22,9 +22,7 @@ import {
   HowToReg as RegisterIcon,
   ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import api, { tokenStorage } from '../../api';
 
 const Register = ({ onRegisterSuccess, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
@@ -104,22 +102,25 @@ const Register = ({ onRegisterSuccess, onSwitchToLogin }) => {
     setSuccessMessage('');
 
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      const response = await api.post('/auth/register', {
         email: formData.email,
         username: formData.username,
         fullName: formData.fullName,
         phone: formData.phone,
         password: formData.password
-      }, {
-        withCredentials: true
       });
+
+      // 保存tokens和用户信息到localStorage
+      const { accessToken, user } = response.data;
+      tokenStorage.setAccessToken(accessToken);
+      tokenStorage.setUser(user);
 
       setSuccessMessage('Registration successful! You are now logged in.');
 
       // Wait a moment before redirecting
       setTimeout(() => {
         if (onRegisterSuccess) {
-          onRegisterSuccess(response.data.user);
+          onRegisterSuccess(user);
         }
       }, 1500);
 
